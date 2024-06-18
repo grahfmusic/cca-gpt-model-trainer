@@ -2,67 +2,88 @@
   <img src="readme_header.png" />
 </p>
 
-# CCA-GPT Model Trainer
+```markdown
+# CCA GPT Model Trainer
 
-This repository contains a script to automate the process of fetching, cleaning, and combining data from MediaWiki and Jira, and then fine-tuning a language model (GPT) on the combined dataset. The script is designed to handle GPU memory constraints and can switch to CPU if needed.
+This repository contains a script created specifically for my employer, designed with MediaWiki and Jira Cloud in mind. The tool automates the process of fetching, cleaning, and combining data from MediaWiki and Jira, and then fine-tuning a language model (GPT) on the combined dataset. Currently, all settings are hardcoded in the Python code, but I will be changing that soon. The script is optimized to handle GPU memory constraints and can switch to CPU if needed.
 
-## Features
+## Requirements
 
-- **Data Extraction**: Fetches data from a local MediaWiki SQL database and Jira using the Jira REST API.
-- **Data Cleaning**: Cleans MediaWiki formatting from the extracted data.
-- **Data Combination**: Combines the cleaned MediaWiki data with Jira entries.
-- **Model Training**: Fine-tunes a GPT model (using `distilgpt2` by default) on the combined dataset.
-- **Error Handling**: Includes robust error handling for database connections, API requests, file operations, and GPU memory issues.
-- **GPU Optimization**: Optimized for training on an Nvidia GPU with fallback to CPU if necessary.
-
-## Installation
-
-**Clone the Repository**:
-   ```sh
-   git clone https://github.com/grahfmusic/cca-gpt-model-trainer.git
-   cd cca-gpt-model-trainer
-   ```
-
-**Install Dependencies**:
-   ```sh
-   pip install MySQLdb beautifulsoup4 requests transformers datasets torch
-   ```
-
-**Configure Credentials**:
-   - Update the database credentials and Jira credentials in the script (`cca-gpt-model-trainer.py`).
-
-## Pre-requisites
-
-**Export the Wiki Database from Host Machine**:
-The Wiki database (`wiki`) uses MariaDB. To export the database, run a mysqldump with the appropriate user and database.
-An example:
-
-     mysqldump -u root -p wiki > wiki_dump.sql
-
-**Create a New Database and Import the Dump**:
-To create a new database called `local_wiki` with the username `grahf` and import the dump into it, run the following commands:
-     sudo mysql -u root -p
-     CREATE DATABASE local_wiki;
-     CREATE USER 'grahf'@'localhost' IDENTIFIED BY 'd3anth0ms0n';
-     GRANT ALL PRIVILEGES ON local_wiki.* TO 'dean'@'localhost';
-     FLUSH PRIVILEGES;
-     exit
-
-     sudo mysql -u grahf -p local_wiki < wiki_dump.sql
-
-This allows the script to export the data from the wikipedia without it directly accessing the production sql database.
+- Python 3.x
+- Required Python packages (install using `pip install -r requirements.txt`):
+  - art
+  - colorama
+  - MySQLdb
+  - beautifulsoup4
+  - requests
+  - transformers
+  - torch
+  - datasets
 
 ## Usage
 
-Run the script to automate the entire process:
-```sh
-python cca-gpt-model-trainer.py
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/yourusername/cca-gpt-model-trainer.git
+   cd cca-gpt-model-trainer
+   ```
+
+2. **Install dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. **Update settings in the script**:
+   
+   Open the `cca-gpt-model-trainer.py` script and update the following settings:
+
+   - **MySQL Database Connection**:
+     ```python
+     connection = MySQLdb.connect(
+         host="localhost", user="grahf", password="<password>", database="local_wiki"
+     )
+     ```
+     Change `host`, `user`, `password`, and `database` to match your MediaWiki database credentials.
+
+   - **Jira API Connection**:
+     ```python
+     url = "https://site.atlassian.net/rest/api/3/search"  # CHANGE THIS TO APPROPRIATE JIRA URL
+     params = {
+         "jql": "project = CSS",  # CHANGE THIS TO APPROPRIATE PROJECT CODE
+         "maxResults": 3000,
+         "fields": "summary,description,comment",
+     }
+
+     email = "email@email.com"  # CHANGE THIS TO APPROPRIATE JIRA USER
+     api_token = "<token>"  # ADD JIRA TOKEN
+     ```
+     Change the `url`, `params['jql']`, `email`, and `api_token` to match your Jira Cloud instance and credentials.
+
+4. **Run the script**:
+   ```bash
+   python cca-gpt-model-trainer.py
+   ```
+
+## Script Functions
+
+- `fetch_mediawiki_data()`: Fetches MediaWiki data and saves it to a text file. Ensure you update the database connection settings.
+- `clean_mediawiki_data()`: Cleans the MediaWiki data by removing HTML tags and other unnecessary content.
+- `fetch_jira_data()`: Fetches Jira entries using the Jira REST API and saves them to a JSON file. Ensure you update the Jira connection settings.
+- `combine_files(jira_file, mediawiki_file, combined_file)`: Combines Jira and MediaWiki data into a single text file for training.
+- `download_tokenizer_files(model_name, output_dir)`: Downloads the tokenizer files for the specified model.
+- `fine_tune_gpt_model(data_file, output_dir)`: Fine-tunes a GPT model on the combined data.
+
+## Future Improvements
+
+- Externalize settings to a configuration file to avoid hardcoding values in the script.
+- Add logging for better traceability and debugging.
+- Improve error handling and retry mechanisms.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Author
+
+- Dean Thomson (grahfmusic) - [GitHub](https://github.com/grahfmusic)
 ```
-
-## Script Workflow
-
-1. **Fetch MediaWiki Data**: Connects to the local SQL database, retrieves page titles and content, and saves them to a text file.
-2. **Clean MediaWiki Data**: Removes MediaWiki formatting from the text file and saves the cleaned content.
-3. **Fetch Jira Data**: Fetches Jira entries using the Jira REST API and saves them to a JSON file.
-4. **Combine Data**: Combines the cleaned MediaWiki data with Jira entries into a single training file.
-5. **Fine-tune GPT Model**: Fine-tunes the specified GPT model on the combined dataset, with error handling for GPU memory issues and optional retry on CPU.
