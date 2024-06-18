@@ -2,7 +2,6 @@
   <img src="readme_header.png" />
 </p>
 
-```markdown
 # CCA GPT Model Trainer
 
 This repository contains a script created specifically for my employer, designed with MediaWiki and Jira Cloud in mind. The tool automates the process of fetching, cleaning, and combining data from MediaWiki and Jira, and then fine-tuning a language model (GPT) on the combined dataset. Currently, all settings are hardcoded in the Python code, but I will be changing that soon. The script is optimized to handle GPU memory constraints and can switch to CPU if needed.
